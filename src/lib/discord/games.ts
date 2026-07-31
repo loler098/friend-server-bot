@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+type PlayerRow = Database["public"]["Tables"]["player_balances"]["Row"];
+
 const DEFAULT_BALANCE = 1000;
 const DAILY_REWARD = 500;
+
 
 function getAdminClient() {
   return createClient<Database>(
