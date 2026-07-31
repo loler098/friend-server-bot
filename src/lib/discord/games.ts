@@ -78,7 +78,13 @@ export async function updateBalance(
   return data;
 }
 
-export async function claimDaily(discordUserId: string, discordUsername: string) {
+export async function claimDaily(
+  discordUserId: string,
+  discordUsername: string,
+): Promise<
+  | { success: true; player: PlayerRow; reward: number }
+  | { success: false; player: PlayerRow; remainingHours: number }
+> {
   const player = await getOrCreatePlayer(discordUserId, discordUsername);
   const now = new Date();
 
@@ -108,6 +114,7 @@ export async function claimDaily(discordUserId: string, discordUsername: string)
   };
 }
 
+
 export async function getLeaderboard(limit = 10) {
   const supabase = getAdminClient();
   const { data, error } = await supabase
@@ -126,12 +133,10 @@ export async function getLeaderboard(limit = 10) {
 const SLOTS_SYMBOLS = ["🍒", "🍋", "🍇", "🍀", "💎", "7️⃣"];
 
 export function spinSlots() {
-  return [
-    SLOTS_SYMBOLS[Math.floor(Math.random() * SLOTS_SYMBOLS.length)],
-    SLOTS_SYMBOLS[Math.floor(Math.random() * SLOTS_SYMBOLS.length)],
-    SLOTS_SYMBOLS[Math.floor(Math.random() * SLOTS_SYMBOLS.length)],
-  ];
+  const symbol = () => SLOTS_SYMBOLS[Math.floor(Math.random() * SLOTS_SYMBOLS.length)]!;
+  return [symbol(), symbol(), symbol()];
 }
+
 
 export function calculateSlotsPayout(bet: number, result: string[]) {
   const [a, b, c] = result;
