@@ -14,33 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
+      deposit_addresses: {
+        Row: {
+          active: boolean
+          address: string
+          coin: string
+          created_at: string
+          id: string
+          min_confirmations: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address: string
+          coin: string
+          created_at?: string
+          id?: string
+          min_confirmations?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string
+          coin?: string
+          created_at?: string
+          id?: string
+          min_confirmations?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deposits: {
+        Row: {
+          address: string
+          coin: string
+          confirmations: number
+          created_at: string
+          credited: boolean
+          crypto_amount: number
+          discord_user_id: string | null
+          eur_cents: number
+          id: string
+          status: string
+          tx_hash: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          coin: string
+          confirmations?: number
+          created_at?: string
+          credited?: boolean
+          crypto_amount?: number
+          discord_user_id?: string | null
+          eur_cents?: number
+          id?: string
+          status?: string
+          tx_hash: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          coin?: string
+          confirmations?: number
+          created_at?: string
+          credited?: boolean
+          crypto_amount?: number
+          discord_user_id?: string | null
+          eur_cents?: number
+          id?: string
+          status?: string
+          tx_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_balances: {
         Row: {
-          balance: number
+          balance_cents: number
           created_at: string | null
           daily_claimed_at: string | null
+          deposit_tag: number
           discord_user_id: string
           discord_username: string
           id: string
           updated_at: string | null
         }
         Insert: {
-          balance?: number
+          balance_cents?: number
           created_at?: string | null
           daily_claimed_at?: string | null
+          deposit_tag?: number
           discord_user_id: string
           discord_username: string
           id?: string
           updated_at?: string | null
         }
         Update: {
-          balance?: number
+          balance_cents?: number
           created_at?: string | null
           daily_claimed_at?: string | null
+          deposit_tag?: number
           discord_user_id?: string
           discord_username?: string
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          address: string
+          coin: string
+          created_at: string
+          discord_user_id: string
+          discord_username: string
+          eur_cents: number
+          fee_cents: number
+          id: string
+          note: string | null
+          released_by: string | null
+          status: string
+          tx_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          coin: string
+          created_at?: string
+          discord_user_id: string
+          discord_username: string
+          eur_cents: number
+          fee_cents?: number
+          id?: string
+          note?: string | null
+          released_by?: string | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          coin?: string
+          created_at?: string
+          discord_user_id?: string
+          discord_username?: string
+          eur_cents?: number
+          fee_cents?: number
+          id?: string
+          note?: string | null
+          released_by?: string | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -49,7 +175,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      adjust_balance: {
+        Args: { _delta_cents: number; _discord_user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
