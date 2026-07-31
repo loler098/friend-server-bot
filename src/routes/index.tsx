@@ -7,10 +7,10 @@ import { syncDiscordCommands } from "@/lib/discord/register.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Discord Gamble Bot" },
-      { name: "description", content: "Multiplayer Discord economy bot with coinflip, slots, blackjack, and daily rewards." },
-      { property: "og:title", content: "Discord Gamble Bot" },
-      { property: "og:description", content: "Multiplayer Discord economy bot with coinflip, slots, blackjack, and daily rewards." },
+      { title: "Discord Euro Casino Bot" },
+      { name: "description", content: "Discord casino bot with euro balances, crypto deposits and withdrawals, mines, towers, upgrader, slots and blackjack." },
+      { property: "og:title", content: "Discord Euro Casino Bot" },
+      { property: "og:description", content: "Discord casino bot with euro balances, crypto deposits and withdrawals, mines, towers, upgrader, slots and blackjack." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
