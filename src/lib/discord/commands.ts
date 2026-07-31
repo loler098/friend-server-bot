@@ -83,7 +83,7 @@ export async function registerDiscordCommands() {
     throw new Error("DISCORD_BOT_TOKEN is not set");
   }
 
-  const appId = token.split(".")[0];
+  const appId = atob(token.split(".")[0]!);
   const res = await fetch(`${DISCORD_API}/applications/${appId}/commands`, {
     method: "PUT",
     headers: {
@@ -100,6 +100,7 @@ export async function registerDiscordCommands() {
 
   return res.json();
 }
+
 
 export function makeEphemeralResponse(content: string) {
   return Response.json({
