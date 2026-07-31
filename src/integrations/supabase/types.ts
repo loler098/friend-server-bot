@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      player_balances: {
+        Row: {
+          balance: number
+          created_at: string | null
+          daily_claimed_at: string | null
+          discord_user_id: string
+          discord_username: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          daily_claimed_at?: string | null
+          discord_user_id: string
+          discord_username: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          daily_claimed_at?: string | null
+          discord_user_id?: string
+          discord_username?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
