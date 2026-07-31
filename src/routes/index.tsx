@@ -23,18 +23,19 @@ function Index() {
   const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string>("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const sync = useServerFn(syncDiscordCommands);
 
-  const webhookUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/api/public/discord/interactions`
-      : "";
+  useEffect(() => {
+    setWebhookUrl(`${window.location.origin}/api/public/discord/interactions`);
+  }, []);
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
 
   const handleSync = async () => {
     setSyncing(true);
