@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { syncDiscordCommands } from "@/lib/discord/register.functions";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
