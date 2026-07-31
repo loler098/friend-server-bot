@@ -4,8 +4,19 @@ import { useServerFn } from "@tanstack/react-start";
 import { syncDiscordCommands } from "@/lib/discord/register.functions";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Discord Gamble Bot" },
+      { name: "description", content: "Multiplayer Discord economy bot with coinflip, slots, blackjack, and daily rewards." },
+      { property: "og:title", content: "Discord Gamble Bot" },
+      { property: "og:description", content: "Multiplayer Discord economy bot with coinflip, slots, blackjack, and daily rewards." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Index,
 });
+
 
 
 function Index() {
