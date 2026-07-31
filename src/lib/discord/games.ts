@@ -160,8 +160,9 @@ export function dealBlackjack() {
   shuffle(deck);
   const player = [deck.pop()!, deck.pop()!];
   const dealer = [deck.pop()!, deck.pop()!];
-  return { player, dealer, deck };
+  return { player: player as string[], dealer: dealer as string[], deck };
 }
+
 
 function createDeck(): string[] {
   const suits = ["♠️", "♥️", "♣️", "♦️"];

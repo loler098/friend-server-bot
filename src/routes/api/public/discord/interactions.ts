@@ -76,20 +76,23 @@ async function handleApplicationCommand(interaction: any) {
         return handleDaily(discordUserId, discordUsername);
 
       case "coinflip": {
-        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value ?? 0;
+        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value as number | undefined;
         const side = interaction.data.options?.find((o: any) => o.name === "side")?.value ?? "heads";
-        return handleCoinflip(discordUserId, discordUsername, amount, side);
+        return handleCoinflip(discordUserId, discordUsername, amount ?? 0, side);
       }
+
 
       case "slots": {
-        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value ?? 0;
-        return handleSlots(discordUserId, discordUsername, amount);
+        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value as number | undefined;
+        return handleSlots(discordUserId, discordUsername, amount ?? 0);
       }
 
+
       case "blackjack": {
-        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value ?? 0;
-        return handleBlackjack(discordUserId, discordUsername, amount);
+        const amount = interaction.data.options?.find((o: any) => o.name === "amount")?.value as number | undefined;
+        return handleBlackjack(discordUserId, discordUsername, amount ?? 0);
       }
+
 
       case "leaderboard":
         return handleLeaderboard();
