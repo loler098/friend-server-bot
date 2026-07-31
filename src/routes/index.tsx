@@ -10,14 +10,34 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [copied, setCopied] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string>("");
+  const sync = useServerFn(syncDiscordCommands);
 
-  const webhookUrl = typeof window !== "undefined" ? `${window.location.origin}/api/public/discord/interactions` : "";
+  const webhookUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/api/public/discord/interactions`
+      : "";
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncResult("");
+    try {
+      await sync();
+      setSyncResult("Commands synced successfully!");
+    } catch (error) {
+      setSyncResult(error instanceof Error ? error.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background px-4 py-16 text-foreground">
