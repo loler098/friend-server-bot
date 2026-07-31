@@ -3,12 +3,12 @@
  * Works in Cloudflare Workers and Node.js.
  */
 
-function hexToBuffer(hex: string): Uint8Array {
+function hexToBuffer(hex: string): ArrayBuffer {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = Number.parseInt(hex.slice(i, i + 2), 16);
   }
-  return bytes;
+  return bytes.buffer;
 }
 
 export async function verifyDiscordKey(
@@ -27,3 +27,4 @@ export async function verifyDiscordKey(
   const data = new TextEncoder().encode(timestamp + body);
   return crypto.subtle.verify("Ed25519", key, hexToBuffer(signature), data);
 }
+

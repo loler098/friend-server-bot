@@ -172,9 +172,13 @@ function createDeck(): string[] {
 function shuffle<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    const a = array[i]!;
+    const b = array[j]!;
+    array[i] = b;
+    array[j] = a;
   }
 }
+
 
 export function cardValue(card: string): number {
   const rank = card.slice(0, -2);
