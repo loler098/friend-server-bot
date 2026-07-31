@@ -73,10 +73,25 @@ function Index() {
               </div>
             </li>
             <li>
-              Invite the bot to your server with the <strong>applications.commands</strong> scope.
+              Invite the bot to your server with the{" "}
+              <strong>applications.commands</strong> scope.
+            </li>
+            <li>
+              Click the button below to push the latest slash commands to Discord.
             </li>
           </ol>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          >
+            {syncing ? "Syncing..." : "Sync slash commands"}
+          </button>
+          {syncResult && (
+            <p className="mt-2 text-sm text-muted-foreground">{syncResult}</p>
+          )}
         </div>
+
 
         <div className="mt-6 rounded-2xl border bg-card p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Available commands</h2>
