@@ -158,8 +158,41 @@ function Index() {
           )}
         </div>
 
+        <div className="mt-6 rounded-2xl border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Bot status</h2>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-block h-3 w-3 rounded-full ${
+                gatewayConnected ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            <span className="font-medium">
+              {gatewayConnected ? "Online" : "Offline"}
+            </span>
+            {gatewaySession && (
+              <span className="text-sm text-muted-foreground">session {gatewaySession.slice(0, 8)}…</span>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Start the bot to show it as online in Discord. The connection is kept alive automatically.
+          </p>
+          <button
+            onClick={handleGatewayToggle}
+            disabled={gatewayConnecting}
+            className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          >
+            {gatewayConnecting
+              ? gatewayConnected
+                ? "Stopping..."
+                : "Starting..."
+              : gatewayConnected
+                ? "Stop bot"
+                : "Start bot"}
+          </button>
+        </div>
 
         <div className="mt-6 rounded-2xl border bg-card p-6 shadow-sm">
+
           <h2 className="mb-4 text-xl font-semibold">Available commands</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Command name="/register" description="Create an account with €1,000.00" />
