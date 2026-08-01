@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { syncDiscordCommands } from "@/lib/discord/register.functions";
+import {
+  connectDiscordGateway,
+  disconnectDiscordGateway,
+  discordGatewayStatus,
+} from "@/lib/discord/gateway.functions";
+
 
 
 export const Route = createFileRoute("/")({
@@ -25,17 +31,64 @@ function Index() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string>("");
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [gatewayConnected, setGatewayConnected] = useState(false);
+  const [gatewayConnecting, setGatewayConnecting] = useState(false);
+  const [gatewaySession, setGatewaySession] = useState<string | null>(null);
   const sync = useServerFn(syncDiscordCommands);
+  const connectGateway = useServerFn(connectDiscordGateway);
+  const disconnectGateway = useServerFn(disconnectDiscordGateway);
+  const statusGateway = useServerFn(discordGatewayStatus);
 
   useEffect(() => {
     setWebhookUrl(`${window.location.origin}/api/public/discord/interactions`);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const s = await statusGateway();
+        if (!cancelled) {
+          setGatewayConnected(s.connected);
+          setGatewaySession(s.sessionId ?? null);
+        }
+      } catch {
+        if (!cancelled) setGatewayConnected(false);
+      }
+    };
+    refresh();
+    const timer = setInterval(refresh, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [statusGateway]);
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleGatewayToggle = async () => {
+    setGatewayConnecting(true);
+    try {
+      if (gatewayConnected) {
+        await disconnectGateway();
+        setGatewayConnected(false);
+        setGatewaySession(null);
+      } else {
+        const result = await connectGateway();
+        setGatewayConnected(result.connected);
+        setGatewaySession(result.sessionId ?? null);
+      }
+    } catch (error) {
+      setSyncResult(error instanceof Error ? error.message : "Gateway action failed");
+    } finally {
+      setGatewayConnecting(false);
+    }
+  };
+
 
 
   const handleSync = async () => {
@@ -105,8 +158,41 @@ function Index() {
           )}
         </div>
 
+        <div className="mt-6 rounded-2xl border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Bot status</h2>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-block h-3 w-3 rounded-full ${
+                gatewayConnected ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            <span className="font-medium">
+              {gatewayConnected ? "Online" : "Offline"}
+            </span>
+            {gatewaySession && (
+              <span className="text-sm text-muted-foreground">session {gatewaySession.slice(0, 8)}…</span>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Start the bot to show it as online in Discord. The connection is kept alive automatically.
+          </p>
+          <button
+            onClick={handleGatewayToggle}
+            disabled={gatewayConnecting}
+            className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          >
+            {gatewayConnecting
+              ? gatewayConnected
+                ? "Stopping..."
+                : "Starting..."
+              : gatewayConnected
+                ? "Stop bot"
+                : "Start bot"}
+          </button>
+        </div>
 
         <div className="mt-6 rounded-2xl border bg-card p-6 shadow-sm">
+
           <h2 className="mb-4 text-xl font-semibold">Available commands</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Command name="/register" description="Create an account with €1,000.00" />

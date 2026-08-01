@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_gateway_status: {
+        Row: {
+          connected: boolean | null
+          id: number
+          last_heartbeat_at: string | null
+          session_id: string | null
+        }
+        Insert: {
+          connected?: boolean | null
+          id?: number
+          last_heartbeat_at?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          connected?: boolean | null
+          id?: number
+          last_heartbeat_at?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       deposit_addresses: {
         Row: {
           active: boolean
