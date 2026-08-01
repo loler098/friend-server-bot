@@ -31,17 +31,64 @@ function Index() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string>("");
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [gatewayConnected, setGatewayConnected] = useState(false);
+  const [gatewayConnecting, setGatewayConnecting] = useState(false);
+  const [gatewaySession, setGatewaySession] = useState<string | null>(null);
   const sync = useServerFn(syncDiscordCommands);
+  const connectGateway = useServerFn(connectDiscordGateway);
+  const disconnectGateway = useServerFn(disconnectDiscordGateway);
+  const statusGateway = useServerFn(discordGatewayStatus);
 
   useEffect(() => {
     setWebhookUrl(`${window.location.origin}/api/public/discord/interactions`);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const s = await statusGateway();
+        if (!cancelled) {
+          setGatewayConnected(s.connected);
+          setGatewaySession(s.sessionId ?? null);
+        }
+      } catch {
+        if (!cancelled) setGatewayConnected(false);
+      }
+    };
+    refresh();
+    const timer = setInterval(refresh, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [statusGateway]);
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleGatewayToggle = async () => {
+    setGatewayConnecting(true);
+    try {
+      if (gatewayConnected) {
+        await disconnectGateway();
+        setGatewayConnected(false);
+        setGatewaySession(null);
+      } else {
+        const result = await connectGateway();
+        setGatewayConnected(result.connected);
+        setGatewaySession(result.sessionId ?? null);
+      }
+    } catch (error) {
+      setSyncResult(error instanceof Error ? error.message : "Gateway action failed");
+    } finally {
+      setGatewayConnecting(false);
+    }
+  };
+
 
 
   const handleSync = async () => {
