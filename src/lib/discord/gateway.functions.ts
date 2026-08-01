@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { startGateway, stopGateway } from "./gateway";
 import { acquireGatewayLock, getLastHeartbeat } from "./gateway-status";
+import { getAdminClient } from "./games";
 
 function isHeartbeatAlive(heartbeat: { connected: boolean | null; last_heartbeat_at: string | null } | null) {
   if (!heartbeat?.connected || !heartbeat.last_heartbeat_at) return false;
@@ -8,19 +9,21 @@ function isHeartbeatAlive(heartbeat: { connected: boolean | null; last_heartbeat
 }
 
 export const connectDiscordGateway = createServerFn({ method: "POST" }).handler(async () => {
-  const heartbeat = await getLastHeartbeat();
-  if (isHeartbeatAlive(heartbeat)) {
-    return {
-      status: "already_connected",
-      connected: true,
-      sessionId: heartbeat?.session_id ?? null,
-    };
-  }
+  // Stop any local connection first, then force a fresh lock so a dead process
+  // from another instance doesn't block a manual start.
+  stopGateway();
+
+  const supabase = getAdminClient();
+  await supabase.from("bot_gateway_status").upsert({
+    id: 1,
+    connected: false,
+    last_heartbeat_at: new Date(Date.now() - 120_000).toISOString(),
+  });
 
   const lock = await acquireGatewayLock(60);
   if (!lock) {
     return {
-      status: "already_active",
+      status: "lock_failed",
       connected: false,
       sessionId: null,
     };
@@ -36,11 +39,9 @@ export const disconnectDiscordGateway = createServerFn({ method: "POST" }).handl
 
 export const discordGatewayStatus = createServerFn({ method: "GET" }).handler(async () => {
   const heartbeat = await getLastHeartbeat();
-  const result = {
+  return {
     connected: isHeartbeatAlive(heartbeat),
     sessionId: heartbeat?.session_id ?? null,
     heartbeat,
   };
-  console.log("discordGatewayStatus", result);
-  return result;
 });
