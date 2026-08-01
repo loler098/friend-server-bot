@@ -36,9 +36,11 @@ export const disconnectDiscordGateway = createServerFn({ method: "POST" }).handl
 
 export const discordGatewayStatus = createServerFn({ method: "GET" }).handler(async () => {
   const heartbeat = await getLastHeartbeat();
-  return {
+  const result = {
     connected: isHeartbeatAlive(heartbeat),
     sessionId: heartbeat?.session_id ?? null,
     heartbeat,
   };
+  console.log("discordGatewayStatus", result);
+  return result;
 });
