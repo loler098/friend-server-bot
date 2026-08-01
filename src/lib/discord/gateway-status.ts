@@ -40,19 +40,20 @@ export async function acquireGatewayLock(maxAgeSeconds = 60) {
   return true;
 }
 
-export async function touchHeartbeat(sessionId?: string) {
+export async function touchHeartbeat(sessionId: string | null | undefined) {
   try {
     const supabase = getAdminClient();
     await supabase.from("bot_gateway_status").upsert({
       id: STATUS_ID,
       connected: true,
       last_heartbeat_at: new Date().toISOString(),
-      session_id: sessionId,
+      session_id: sessionId ?? null,
     });
   } catch (e) {
     console.error("Failed to touch heartbeat", e);
   }
 }
+
 
 export async function markDisconnected() {
   try {

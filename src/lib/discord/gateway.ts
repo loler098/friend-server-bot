@@ -60,7 +60,8 @@ export function startGateway() {
           if (socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ op: 1, d: lastSequence }));
           }
-          void touchHeartbeat(sessionId ?? undefined);
+        void touchHeartbeat(sessionId ?? null);
+
         }, interval);
         socket.send(
           JSON.stringify({
