@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { startGateway, stopGateway } from "@/lib/discord/gateway";
+import { runGatewayFor, stopGateway } from "@/lib/discord/gateway";
 import { acquireGatewayLock, getLastHeartbeat } from "@/lib/discord/gateway-status";
 
 function isHeartbeatAlive(heartbeat: { connected: boolean | null; last_heartbeat_at: string | null } | null) {
@@ -57,7 +57,8 @@ export const Route = createFileRoute("/api/public/discord/gateway")({
           });
         }
 
-        const result = startGateway();
+        // Hold the connection open for ~50s; the minute cron re-opens it.
+        const result = await runGatewayFor(50_000);
         return Response.json({ success: true, ...result });
       },
     },
