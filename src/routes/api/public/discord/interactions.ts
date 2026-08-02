@@ -382,6 +382,29 @@ async function handlePayouts(interaction: any, userId: string) {
   );
 }
 
+async function handleAdjustBalance(interaction: any, userId: string, sign: 1 | -1) {
+  if (!isAdmin(userId)) return makeEphemeralResponse("Owners only.");
+
+  const targetId = String(opt(interaction, "user") ?? "");
+  if (!targetId) return makeEphemeralResponse("Pick a player.");
+
+  const cents = toCents(Number(opt(interaction, "amount")));
+  if (cents === null || cents <= 0) return makeEphemeralResponse("Invalid amount.");
+
+  const resolvedUser = interaction.data?.resolved?.users?.[targetId];
+  const targetName: string = resolvedUser?.global_name ?? resolvedUser?.username ?? "Unknown";
+  const player = await getOrCreatePlayer(targetId, targetName);
+
+  const delta = sign === 1 ? cents : -Math.min(cents, player.balance_cents);
+  const balance = await adjustBalance(targetId, delta);
+
+  return makeEphemeralResponse(
+    sign === 1
+      ? `Added **${formatEur(cents)}** to ${mention(targetId)} — new balance ${formatEur(balance)}.`
+      : `Removed **${formatEur(-delta)}** from ${mention(targetId)} — new balance ${formatEur(balance)}.`,
+  );
+}
+
 async function handleSetWallet(interaction: any, userId: string) {
   if (!isAdmin(userId)) return makeEphemeralResponse("Admins only.");
   const coinRaw = String(opt(interaction, "coin"));
