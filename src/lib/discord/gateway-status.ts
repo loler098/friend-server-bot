@@ -27,16 +27,7 @@ export async function acquireGatewayLock(maxAgeSeconds = 60) {
     return false;
   }
 
-  const { error } = await supabase.from("bot_gateway_status").upsert({
-    id: STATUS_ID,
-    connected: true,
-    last_heartbeat_at: now,
-  });
-
-  if (error) {
-    console.error("Gateway lock upsert failed", error);
-    return false;
-  }
+  void now;
   return true;
 }
 

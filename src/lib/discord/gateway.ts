@@ -28,6 +28,10 @@ export function stopGateway() {
 }
 
 export function startGateway() {
+  return startGatewayInternal();
+}
+
+function startGatewayInternal() {
   if (activeSocket?.readyState === WebSocket.OPEN) {
     return { status: "already_connected", connected: true, sessionId };
   }
@@ -126,4 +130,21 @@ export function startGateway() {
   };
 
   return { status: "connecting", connected: false, sessionId: null };
+}
+
+/**
+ * Serverless workers cannot hold a socket after a response is sent, so we keep
+ * the request alive for `durationMs` while the gateway connection stays open.
+ * A cron ping every minute makes the presence effectively continuous.
+ */
+export async function runGatewayFor(durationMs: number) {
+  const result = startGatewayInternal();
+  const started = Date.now();
+  while (Date.now() - started < durationMs) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (!activeSocket || activeSocket.readyState === WebSocket.CLOSED) break;
+  }
+  const finalSession = sessionId;
+  const wasOpen = activeSocket?.readyState === WebSocket.OPEN;
+  return { ...result, status: wasOpen ? "ran" : "closed", sessionId: finalSession, connected: wasOpen };
 }

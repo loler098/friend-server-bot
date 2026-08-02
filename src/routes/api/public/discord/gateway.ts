@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { startGateway, stopGateway } from "@/lib/discord/gateway";
-import { acquireGatewayLock, getLastHeartbeat } from "@/lib/discord/gateway-status";
+import { runGatewayFor, stopGateway } from "@/lib/discord/gateway";
+import { getLastHeartbeat } from "@/lib/discord/gateway-status";
 
 function isHeartbeatAlive(heartbeat: { connected: boolean | null; last_heartbeat_at: string | null } | null) {
   if (!heartbeat?.connected || !heartbeat.last_heartbeat_at) return false;
@@ -38,26 +38,8 @@ export const Route = createFileRoute("/api/public/discord/gateway")({
           return Response.json({ success: true, ...stopGateway() });
         }
 
-        const heartbeat = await getLastHeartbeat();
-        if (isHeartbeatAlive(heartbeat)) {
-          return Response.json({
-            success: true,
-            status: "already_connected",
-            connected: true,
-            sessionId: heartbeat?.session_id ?? null,
-          });
-        }
-
-        const lock = await acquireGatewayLock(60);
-        if (!lock) {
-          return Response.json({
-            success: true,
-            status: "already_active",
-            connected: false,
-          });
-        }
-
-        const result = startGateway();
+        // Hold the connection open for ~50s; the minute cron re-opens it.
+        const result = await runGatewayFor(50_000);
         return Response.json({ success: true, ...result });
       },
     },
