@@ -38,25 +38,6 @@ export const Route = createFileRoute("/api/public/discord/gateway")({
           return Response.json({ success: true, ...stopGateway() });
         }
 
-        const heartbeat = await getLastHeartbeat();
-        if (isHeartbeatAlive(heartbeat)) {
-          return Response.json({
-            success: true,
-            status: "already_connected",
-            connected: true,
-            sessionId: heartbeat?.session_id ?? null,
-          });
-        }
-
-        const lock = await acquireGatewayLock(60);
-        if (!lock) {
-          return Response.json({
-            success: true,
-            status: "already_active",
-            connected: false,
-          });
-        }
-
         // Hold the connection open for ~50s; the minute cron re-opens it.
         const result = await runGatewayFor(50_000);
         return Response.json({ success: true, ...result });
