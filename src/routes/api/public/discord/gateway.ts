@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { runGatewayFor, stopGateway } from "@/lib/discord/gateway";
-import { acquireGatewayLock, getLastHeartbeat } from "@/lib/discord/gateway-status";
+import { getLastHeartbeat } from "@/lib/discord/gateway-status";
 
 function isHeartbeatAlive(heartbeat: { connected: boolean | null; last_heartbeat_at: string | null } | null) {
   if (!heartbeat?.connected || !heartbeat.last_heartbeat_at) return false;
