@@ -114,6 +114,12 @@ async function handleApplicationCommand(interaction: any) {
         return await handlePayouts(interaction, userId);
       case "setwallet":
         return await handleSetWallet(interaction, userId);
+      case "changecoin":
+        return await handleSetWallet(interaction, userId);
+      case "addbalance":
+        return await handleAdjustBalance(interaction, userId, 1);
+      case "removebalance":
+        return await handleAdjustBalance(interaction, userId, -1);
       default:
         return makeEphemeralResponse("Unknown command.");
     }
