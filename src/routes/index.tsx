@@ -197,7 +197,6 @@ function Index() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Command name="/register" description="Create an account with €1,000.00" />
             <Command name="/balance" description="Check your euro balance (private)" />
-            <Command name="/daily" description="Claim €500.00 every 24 hours" />
             <Command name="/coinflip" description="Bet on heads or tails (public)" />
             <Command name="/slots" description="Spin the slot machine (public)" />
             <Command name="/blackjack" description="Play a hand against the dealer (public)" />
