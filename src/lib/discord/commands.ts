@@ -5,7 +5,6 @@ export const DISCORD_API = "https://discord.com/api/v10";
 export const COMMANDS = [
   { name: "register", description: "Create a casino account", type: 1 },
   { name: "balance", description: "Check your euro balance (private)", type: 1 },
-  { name: "daily", description: "Claim your daily euro bonus (every 24 hours)", type: 1 },
   {
     name: "coinflip",
     description: "Flip a coin for euros",
