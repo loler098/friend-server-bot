@@ -4,7 +4,6 @@ import {
   adjustBalance,
   blackjackResult,
   calculateSlotsPayout,
-  claimDaily,
   dealBlackjack,
   dealerPlay,
   getLeaderboard,
@@ -93,8 +92,6 @@ async function handleApplicationCommand(interaction: any) {
         return await handleRegister(userId, username);
       case "balance":
         return await handleBalance(userId, username);
-      case "daily":
-        return await handleDaily(userId, username);
       case "coinflip":
         return await handleCoinflip(interaction, userId, username);
       case "slots":
@@ -135,23 +132,13 @@ async function handleApplicationCommand(interaction: any) {
 async function handleRegister(userId: string, username: string) {
   const player = await getOrCreatePlayer(userId, username);
   return makeEphemeralResponse(
-    `Account ready. Balance: **${formatEur(player.balance_cents)}**\nUse \`/daily\` for a free bonus or \`/deposit\` to top up with crypto.`,
+    `Account ready. Balance: **${formatEur(player.balance_cents)}**\nUse \`/deposit\` to top up with crypto.`,
   );
 }
 
 async function handleBalance(userId: string, username: string) {
   const player = await getOrCreatePlayer(userId, username);
   return makeEphemeralResponse(`Your balance: **${formatEur(player.balance_cents)}**`);
-}
-
-async function handleDaily(userId: string, username: string) {
-  const result = await claimDaily(userId, username);
-  if (!result.success) {
-    return makeEphemeralResponse(`Already claimed. Try again in ~${result.remainingHours}h.`);
-  }
-  return makeEphemeralResponse(
-    `Claimed **${formatEur(result.rewardCents)}**! New balance: **${formatEur(result.balanceCents)}**`,
-  );
 }
 
 async function handleLeaderboard() {
