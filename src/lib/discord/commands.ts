@@ -152,6 +152,45 @@ export const COMMANDS = [
     ],
   },
   {
+    name: "addbalance",
+    description: "Owner: add euros to a player's balance",
+    type: 1,
+    options: [
+      { name: "user", description: "Player", type: 6, required: true },
+      { name: "amount", description: "Amount in euros", type: 10, required: true, min_value: 0.01 },
+    ],
+  },
+  {
+    name: "removebalance",
+    description: "Owner: remove euros from a player's balance",
+    type: 1,
+    options: [
+      { name: "user", description: "Player", type: 6, required: true },
+      { name: "amount", description: "Amount in euros", type: 10, required: true, min_value: 0.01 },
+    ],
+  },
+  {
+    name: "changecoin",
+    description: "Owner: change the receiving address for a coin",
+    type: 1,
+    options: [
+      {
+        name: "coin",
+        description: "Coin",
+        type: 3,
+        required: true,
+        choices: [
+          { name: "Bitcoin (BTC)", value: "BTC" },
+          { name: "Ethereum (ETH)", value: "ETH" },
+          { name: "Litecoin (LTC)", value: "LTC" },
+          { name: "USDT (TRC-20)", value: "USDT" },
+        ],
+      },
+      { name: "address", description: "New receiving address", type: 3, required: true },
+      { name: "confirmations", description: "Confirmations required", type: 4, required: false, min_value: 1, max_value: 20 },
+    ],
+  },
+  {
     name: "setwallet",
     description: "Admin: set the receiving wallet for a coin",
     type: 1,
