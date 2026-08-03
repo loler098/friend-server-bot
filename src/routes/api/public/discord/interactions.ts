@@ -2,21 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { verifyDiscordKey } from "@/lib/discord/verify";
 import {
   adjustBalance,
-  blackjackResult,
   calculateSlotsPayout,
-  dealBlackjack,
-  dealerPlay,
   getLeaderboard,
   getOrCreatePlayer,
-  handValue,
-  playMines,
-  playTowers,
   playUpgrader,
-  renderMinesGrid,
   spinSlots,
-  TOWER_DIFFICULTY,
-  type TowerDifficulty,
 } from "@/lib/discord/games";
+import {
+  handleGameComponent,
+  startBlackjack,
+  startMines,
+  startTowers,
+  TOWERS,
+  type TowersDifficulty,
+} from "@/lib/discord/interactive";
+import { animateUpgrader } from "@/lib/discord/upgrader";
 import { formatEur, toCents } from "@/lib/discord/money";
 import {
   COINS,
@@ -58,6 +58,7 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
           const interaction = JSON.parse(body);
           if (interaction.type === 1) return Response.json({ type: 1 });
           if (interaction.type === 2) return await handleApplicationCommand(interaction);
+          if (interaction.type === 3) return await handleComponent(interaction);
           return Response.json({ type: 4, data: { content: "Unknown interaction type" } });
         } catch (error) {
           console.error("Discord interaction handler failed", error);
@@ -73,6 +74,27 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
 });
 
 type Option = { name: string; value: string | number };
+
+async function handleComponent(interaction: any) {
+  const caller = interaction.user ?? interaction.member?.user;
+  if (!caller) return makeEphemeralResponse("Could not identify the caller.");
+  const customId: string = interaction.data?.custom_id ?? "";
+  const [prefix, id, action] = customId.split(":");
+  if (!prefix || !id || !action) return Response.json({ type: 6 });
+
+  if (prefix === "w") {
+    if (!isAdmin(caller.id)) return makeEphemeralResponse("Admins only.");
+    const row = await settleWithdrawal(id, action === "paid" ? "paid" : "reject");
+    if (!row) return makeEphemeralResponse("No pending payout with that id.");
+    return makeEphemeralResponse(
+      action === "paid"
+        ? `Marked ${formatEur(row.eur_cents)} to ${row.discord_username} as paid.`
+        : `Refunded ${formatEur(row.eur_cents)} back to ${row.discord_username}.`,
+    );
+  }
+
+  return await handleGameComponent(prefix, id, action, caller.id);
+}
 
 function opt(interaction: any, name: string): string | number | undefined {
   const options: Option[] = interaction.data?.options ?? [];
@@ -219,68 +241,27 @@ async function handleBlackjack(interaction: any, userId: string, username: strin
   const check = await requireBet(interaction, userId, username);
   if (check.error) return check.error;
   const bet = check.bet!;
-
-  const { player, dealer, deck } = dealBlackjack();
-  while (handValue(player) < 17) player.push(deck.pop()!);
-  const finalDealer = handValue(player) > 21 ? dealer : dealerPlay(deck, dealer);
-  const outcome = blackjackResult(player, finalDealer, bet);
-  const balance = await adjustBalance(userId, outcome.payout);
-
-  return makeChannelResponse(
-    `🃏 ${mention(userId)} plays blackjack for ${formatEur(bet)}\n` +
-      `Your hand: ${player.join(" ")} (**${outcome.playerValue}**)\n` +
-      `Dealer: ${finalDealer.join(" ")} (**${outcome.dealerValue}**)\n` +
-      `${outcome.message} — balance ${formatEur(balance)}`,
-  );
+  return await startBlackjack(userId, username, bet);
 }
 
 async function handleMines(interaction: any, userId: string, username: string) {
   const check = await requireBet(interaction, userId, username);
   if (check.error) return check.error;
   const bet = check.bet!;
-
   const mines = Number(opt(interaction, "mines"));
-  const picks = Number(opt(interaction, "picks"));
-  if (picks > 25 - mines) {
-    return makeEphemeralResponse(`With ${mines} mines you can reveal at most ${25 - mines} tiles.`);
+  if (!Number.isInteger(mines) || mines < 1 || mines > 19) {
+    return makeEphemeralResponse("Pick between 1 and 19 mines.");
   }
-
-  const game = playMines(mines, picks);
-  const lost = game.hitBomb >= 0;
-  const payout = lost ? 0 : Math.floor(bet * game.multiplier);
-  const balance = await adjustBalance(userId, payout - bet);
-
-  return makeChannelResponse(
-    `💣 ${mention(userId)} plays mines for ${formatEur(bet)} (${mines} mines, ${picks} picks)\n` +
-      `${renderMinesGrid(game.bombs, game.revealed, lost)}\n` +
-      (lost
-        ? `Hit a mine after ${game.safeCleared} safe tiles. Lost **${formatEur(bet)}**`
-        : `Cleared ${game.safeCleared} tiles at **${game.multiplier}x** — won **${formatEur(payout - bet)}**`) +
-      ` — balance ${formatEur(balance)}`,
-  );
+  return await startMines(userId, username, bet, mines);
 }
 
 async function handleTowers(interaction: any, userId: string, username: string) {
   const check = await requireBet(interaction, userId, username);
   if (check.error) return check.error;
   const bet = check.bet!;
-
-  const difficulty = String(opt(interaction, "difficulty")) as TowerDifficulty;
-  if (!(difficulty in TOWER_DIFFICULTY)) return makeEphemeralResponse("Unknown difficulty.");
-  const floors = Number(opt(interaction, "floors"));
-
-  const game = playTowers(difficulty, floors);
-  const payout = game.alive ? Math.floor(bet * game.multiplier) : 0;
-  const balance = await adjustBalance(userId, payout - bet);
-
-  return makeChannelResponse(
-    `🗼 ${mention(userId)} climbs the ${difficulty} tower for ${formatEur(bet)}\n` +
-      `${game.rows.join("\n")}\n` +
-      (game.alive
-        ? `Reached the top at **${game.multiplier}x** — won **${formatEur(payout - bet)}**`
-        : `Fell on floor ${game.cleared + 1}. Lost **${formatEur(bet)}**`) +
-      ` — balance ${formatEur(balance)}`,
-  );
+  const difficulty = String(opt(interaction, "difficulty")) as TowersDifficulty;
+  if (!(difficulty in TOWERS)) return makeEphemeralResponse("Unknown difficulty.");
+  return await startTowers(userId, username, bet, difficulty);
 }
 
 async function handleUpgrader(interaction: any, userId: string, username: string) {
@@ -293,14 +274,19 @@ async function handleUpgrader(interaction: any, userId: string, username: string
   const payout = game.won ? Math.floor(bet * multiplier) : 0;
   const balance = await adjustBalance(userId, payout - bet);
 
-  return makeChannelResponse(
+  const header =
     `⚡ ${mention(userId)} tries a **${multiplier}x** upgrade with ${formatEur(bet)}\n` +
-      `Chance ${(game.chance * 100).toFixed(1)}% — rolled ${game.roll}\n` +
-      (game.won
-        ? `Upgraded! Won **${formatEur(payout - bet)}**`
-        : `Failed. Lost **${formatEur(bet)}**`) +
-      ` — balance ${formatEur(balance)}`,
-  );
+    `Chance ${(game.chance * 100).toFixed(1)}%`;
+  const final =
+    `${header}\nRolled **${game.roll}**\n` +
+    (game.won
+      ? `✅ Upgraded! Won **${formatEur(payout - bet)}**`
+      : `❌ Failed. Lost **${formatEur(bet)}**`) +
+    ` — balance ${formatEur(balance)}`;
+
+  const animated = await animateUpgrader(interaction.id, interaction.token, header, final);
+  if (animated) return new Response(null, { status: 202 });
+  return makeChannelResponse(final);
 }
 
 /* ------------------------------- Banking ------------------------------- */
@@ -371,11 +357,27 @@ async function handlePayouts(interaction: any, userId: string) {
   if (action === "list") {
     const rows = await listPendingWithdrawals();
     if (rows.length === 0) return makeEphemeralResponse("No pending payouts.");
-    const lines = rows.map(
+    const shown = rows.slice(0, 5);
+    const lines = shown.map(
       (r) =>
         `\`${r.id}\` — ${r.discord_username} · ${formatEur(r.eur_cents)} ${r.coin} → \`${r.address}\``,
     );
-    return makeEphemeralResponse(`**Pending payouts**\n${lines.join("\n")}`);
+    const components = shown.map((r) => ({
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 3,
+          label: `Paid · ${r.discord_username} ${formatEur(r.eur_cents)}`,
+          custom_id: `w:${r.id}:paid`,
+        },
+        { type: 2, style: 4, label: "Refund", custom_id: `w:${r.id}:refund` },
+      ],
+    }));
+    return Response.json({
+      type: 4,
+      data: { content: `**Pending payouts**\n${lines.join("\n")}`, components, flags: 64 },
+    });
   }
 
   const id = String(opt(interaction, "id") ?? "");

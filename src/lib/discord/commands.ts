@@ -41,17 +41,16 @@ export const COMMANDS = [
   },
   {
     name: "mines",
-    description: "Reveal tiles without hitting a mine",
+    description: "Pick tiles yourself without hitting a mine",
     type: 1,
     options: [
       { name: "amount", description: "Bet in euros", type: 10, required: true, min_value: 0.1 },
-      { name: "mines", description: "Number of mines (1-24)", type: 4, required: true, min_value: 1, max_value: 24 },
-      { name: "picks", description: "How many tiles to reveal", type: 4, required: true, min_value: 1, max_value: 24 },
+      { name: "mines", description: "Number of mines (1-19)", type: 4, required: true, min_value: 1, max_value: 19 },
     ],
   },
   {
     name: "towers",
-    description: "Climb the tower without stepping on a trap",
+    description: "Climb the tower, picking each tile yourself",
     type: 1,
     options: [
       { name: "amount", description: "Bet in euros", type: 10, required: true, min_value: 0.1 },
@@ -66,7 +65,6 @@ export const COMMANDS = [
           { name: "Hard (1 of 3 safe)", value: "hard" },
         ],
       },
-      { name: "floors", description: "Floors to climb (1-8)", type: 4, required: true, min_value: 1, max_value: 8 },
     ],
   },
   {

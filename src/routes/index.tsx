@@ -195,19 +195,19 @@ function Index() {
 
           <h2 className="mb-4 text-xl font-semibold">Available commands</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Command name="/register" description="Create an account with €1,000.00" />
+            <Command name="/register" description="Create an account" />
             <Command name="/balance" description="Check your euro balance (private)" />
             <Command name="/coinflip" description="Bet on heads or tails (public)" />
             <Command name="/slots" description="Spin the slot machine (public)" />
-            <Command name="/blackjack" description="Play a hand against the dealer (public)" />
-            <Command name="/mines" description="Reveal tiles, avoid the mines (public)" />
-            <Command name="/towers" description="Climb the tower for a multiplier (public)" />
-            <Command name="/upgrader" description="Gamble for a target multiplier (public)" />
+            <Command name="/blackjack" description="Hit or stand against the dealer (public)" />
+            <Command name="/mines" description="Pick your own tiles, cash out anytime (public)" />
+            <Command name="/towers" description="Pick a tile each floor, cash out anytime (public)" />
+            <Command name="/upgrader" description="Watch the spin for a target multiplier (public)" />
             <Command name="/deposit" description="Get a BTC / ETH / LTC / USDT address (private)" />
             <Command name="/withdraw" description="Request a crypto payout (private)" />
             <Command name="/leaderboard" description="Top 10 richest players (private)" />
             <Command name="/setwallet" description="Admin: set the receiving wallet for a coin" />
-            <Command name="/payouts" description="Admin: list, pay or reject withdrawals" />
+            <Command name="/payouts" description="Admin: mark paid or refund withdrawals with buttons" />
           </div>
         </div>
       </div>
