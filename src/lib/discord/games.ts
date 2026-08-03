@@ -4,7 +4,7 @@ import { formatEur } from "./money";
 
 type PlayerRow = Database["public"]["Tables"]["player_balances"]["Row"];
 
-const DEFAULT_BALANCE_CENTS = 100000; // €1000.00
+const DEFAULT_BALANCE_CENTS = 0; // new players start empty and must deposit
 const DAILY_REWARD_CENTS = 50000; // €500.00
 const HOUSE_EDGE = 0.03;
 
