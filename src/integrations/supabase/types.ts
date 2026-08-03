@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_sessions: {
+        Row: {
+          bet_cents: number
+          created_at: string
+          discord_user_id: string
+          discord_username: string
+          id: string
+          kind: string
+          state: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bet_cents: number
+          created_at?: string
+          discord_user_id: string
+          discord_username: string
+          id?: string
+          kind: string
+          state?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bet_cents?: number
+          created_at?: string
+          discord_user_id?: string
+          discord_username?: string
+          id?: string
+          kind?: string
+          state?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_balances: {
         Row: {
           balance_cents: number
