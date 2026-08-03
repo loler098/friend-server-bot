@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const publicKey = process.env["DISCORD_PUBLIC_KEY"];
+        const publicKey = process.env["DISCORD_PUBLIC_KEY"]?.trim();
         if (!publicKey) {
           return new Response("Missing Discord public key", { status: 500 });
         }
@@ -49,15 +49,24 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
         const timestamp = request.headers.get("X-Signature-Timestamp") ?? "";
         const body = await request.text();
 
-        const isValid = await verifyDiscordKey(body, signature, timestamp, publicKey);
-        if (!isValid) {
-          return new Response("Invalid signature", { status: 401 });
-        }
+        try {
+          const isValid = await verifyDiscordKey(body, signature, timestamp, publicKey);
+          if (!isValid) {
+            return new Response("Invalid signature", { status: 401 });
+          }
 
-        const interaction = JSON.parse(body);
-        if (interaction.type === 1) return Response.json({ type: 1 });
-        if (interaction.type === 2) return handleApplicationCommand(interaction);
-        return Response.json({ type: 4, data: { content: "Unknown interaction type" } });
+          const interaction = JSON.parse(body);
+          if (interaction.type === 1) return Response.json({ type: 1 });
+          if (interaction.type === 2) return await handleApplicationCommand(interaction);
+          return Response.json({ type: 4, data: { content: "Unknown interaction type" } });
+        } catch (error) {
+          console.error("Discord interaction handler failed", error);
+          // Never bubble up: an HTML 500 shows as "The application did not respond".
+          return Response.json({
+            type: 4,
+            data: { content: "Something went wrong handling that command.", flags: 64 },
+          });
+        }
       },
     },
   },
