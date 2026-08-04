@@ -3,7 +3,7 @@ import { formatEur } from "./money";
 import { createSession, getSession, saveSession, type GameSession } from "./sessions";
 import { mention } from "./commands";
 
-const HOUSE_EDGE = 0.03;
+const HOUSE_EDGE = 0.02;
 
 /* ----------------------------- Discord payloads ---------------------------- */
 
