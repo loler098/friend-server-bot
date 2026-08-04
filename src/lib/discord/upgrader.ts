@@ -1,7 +1,14 @@
 import { DISCORD_API } from "./commands";
 
-function appId(token: string) {
-  return atob(token.split(".")[0]!);
+function appIdFromToken(token: string): string | null {
+  try {
+    let seg = token.split(".")[0]!.replace(/-/g, "+").replace(/_/g, "/");
+    while (seg.length % 4 !== 0) seg += "=";
+    const id = atob(seg);
+    return /^\d+$/.test(id) ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 const FRAMES = ["🎰 |", "🎰 /", "🎰 —", "🎰 \\"];
@@ -12,9 +19,11 @@ export async function animateUpgrader(
   interactionToken: string,
   header: string,
   finalContent: string,
+  applicationId?: string,
 ) {
   const token = process.env["DISCORD_BOT_TOKEN"];
-  if (!token) return false;
+  const appId = applicationId ?? (token ? appIdFromToken(token) : null);
+  if (!appId) return false;
 
   const ack = await fetch(`${DISCORD_API}/interactions/${interactionId}/${interactionToken}/callback`, {
     method: "POST",
@@ -23,11 +32,12 @@ export async function animateUpgrader(
   });
   if (!ack.ok) return false;
 
-  const editUrl = `${DISCORD_API}/webhooks/${appId(token)}/${interactionToken}/messages/@original`;
+  // Webhook edits are authenticated by the interaction token itself.
+  const editUrl = `${DISCORD_API}/webhooks/${appId}/${interactionToken}/messages/@original`;
   const edit = (content: string) =>
     fetch(editUrl, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bot ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
     });
 

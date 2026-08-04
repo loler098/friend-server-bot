@@ -284,7 +284,13 @@ async function handleUpgrader(interaction: any, userId: string, username: string
       : `❌ Failed. Lost **${formatEur(bet)}**`) +
     ` — balance ${formatEur(balance)}`;
 
-  const animated = await animateUpgrader(interaction.id, interaction.token, header, final);
+  const animated = await animateUpgrader(
+    interaction.id,
+    interaction.token,
+    header,
+    final,
+    interaction.application_id,
+  );
   if (animated) return new Response(null, { status: 202 });
   return makeChannelResponse(final);
 }
