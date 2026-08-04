@@ -6,7 +6,7 @@ type PlayerRow = Database["public"]["Tables"]["player_balances"]["Row"];
 
 const DEFAULT_BALANCE_CENTS = 0; // new players start empty and must deposit
 const DAILY_REWARD_CENTS = 50000; // €500.00
-const HOUSE_EDGE = 0.03;
+const HOUSE_EDGE = 0.02;
 
 export function getAdminClient() {
   return createClient<Database>(
