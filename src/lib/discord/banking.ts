@@ -40,6 +40,47 @@ export async function createDepositIntent(
   return wallet;
 }
 
+/**
+ * Locks an exact crypto amount to the user's open intent so the scanner can
+ * match the incoming transaction by amount.
+ */
+export async function setDepositIntentAmount(
+  discordUserId: string,
+  discordUsername: string,
+  coin: Coin,
+  eurCents: number,
+) {
+  const wallet = await getDepositAddress(coin);
+  if (!wallet) return null;
+  await getOrCreatePlayer(discordUserId, discordUsername);
+
+  const price = await getEurPrice(coin);
+  const decimals = Math.min(8, COINS[coin].decimals);
+  const cryptoAmount = Number(((eurCents / 100) / price).toFixed(decimals));
+  if (!(cryptoAmount > 0)) return null;
+
+  const supabase = getAdminClient();
+  await supabase
+    .from("deposits")
+    .update({ status: "expired" })
+    .eq("discord_user_id", discordUserId)
+    .eq("coin", coin)
+    .eq("status", "intent");
+
+  const { error } = await supabase.from("deposits").insert({
+    discord_user_id: discordUserId,
+    coin,
+    tx_hash: `intent:${crypto.randomUUID()}`,
+    address: wallet.address,
+    crypto_amount: cryptoAmount,
+    eur_cents: eurCents,
+    status: "intent",
+  });
+  if (error) throw new Error(error.message);
+
+  return { wallet, cryptoAmount, decimals };
+}
+
 export type ScanResult = {
   credited: Array<{ discordUserId: string; coin: Coin; eurCents: number; hash: string }>;
   seen: number;
@@ -90,15 +131,24 @@ export async function scanDeposits(): Promise<ScanResult> {
 
       if (!row) {
         const since = new Date(Date.now() - INTENT_WINDOW_MINUTES * 60_000).toISOString();
-        const { data: intent } = await supabase
+        const { data: intents } = await supabase
           .from("deposits")
           .select("*")
           .eq("coin", coin)
           .eq("status", "intent")
           .gte("created_at", since)
           .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
+          .limit(50);
+
+        // Prefer an intent whose declared amount matches this transaction.
+        const open = intents ?? [];
+        const matched = open.find(
+          (i) =>
+            Number(i.crypto_amount) > 0 &&
+            Math.abs(Number(i.crypto_amount) - tx.amount) <=
+              Math.max(Number(i.crypto_amount) * 0.01, 1e-8),
+        );
+        const intent = matched ?? open.find((i) => !(Number(i.crypto_amount) > 0)) ?? null;
 
         const eurCents = Math.round(tx.amount * price * 100);
         const { data: inserted } = await supabase
