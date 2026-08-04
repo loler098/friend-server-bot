@@ -32,6 +32,7 @@ import {
   createDepositIntent,
   listPendingWithdrawals,
   requestWithdrawal,
+  setDepositIntentAmount,
   settleWithdrawal,
 } from "@/lib/discord/banking";
 import { makeChannelResponse, makeEphemeralResponse, mention } from "@/lib/discord/commands";
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
           if (interaction.type === 1) return Response.json({ type: 1 });
           if (interaction.type === 2) return await handleApplicationCommand(interaction);
           if (interaction.type === 3) return await handleComponent(interaction);
+          if (interaction.type === 5) return await handleModalSubmit(interaction);
           return Response.json({ type: 4, data: { content: "Unknown interaction type" } });
         } catch (error) {
           console.error("Discord interaction handler failed", error);
@@ -82,6 +84,34 @@ async function handleComponent(interaction: any) {
   const [prefix, id, action] = customId.split(":");
   if (!prefix || !id || !action) return Response.json({ type: 6 });
 
+  if (prefix === "dep" && action === "amount") {
+    if (!isCoin(id)) return makeEphemeralResponse("Unsupported coin.");
+    return Response.json({
+      type: 9,
+      data: {
+        custom_id: `depamt:${id}`,
+        title: `Deposit ${COINS[id].label}`,
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 4,
+                custom_id: "amount",
+                label: "Amount in EUR you will send",
+                style: 1,
+                min_length: 1,
+                max_length: 12,
+                placeholder: "25.00",
+                required: true,
+              },
+            ],
+          },
+        ],
+      },
+    });
+  }
+
   if (prefix === "w") {
     if (!isAdmin(caller.id)) return makeEphemeralResponse("Admins only.");
     const row = await settleWithdrawal(id, action === "paid" ? "paid" : "reject");
@@ -94,6 +124,29 @@ async function handleComponent(interaction: any) {
   }
 
   return await handleGameComponent(prefix, id, action, caller.id);
+}
+
+async function handleModalSubmit(interaction: any) {
+  const caller = interaction.user ?? interaction.member?.user;
+  if (!caller) return makeEphemeralResponse("Could not identify the caller.");
+  const customId: string = interaction.data?.custom_id ?? "";
+  const [prefix, coinRaw] = customId.split(":");
+  if (prefix !== "depamt" || !coinRaw || !isCoin(coinRaw)) return Response.json({ type: 6 });
+
+  const rows: any[] = interaction.data?.components ?? [];
+  const raw = rows[0]?.components?.[0]?.value ?? "";
+  const cents = toCents(Number(String(raw).replace(",", ".")));
+  if (cents === null || cents <= 0) return makeEphemeralResponse("Enter a valid EUR amount.");
+
+  const username: string = caller.username ?? caller.global_name ?? "Unknown";
+  const result = await setDepositIntentAmount(caller.id, username, coinRaw, cents);
+  if (!result) return makeEphemeralResponse("Could not lock that amount. Try again.");
+
+  return makeEphemeralResponse(
+    `**Send exactly \`${result.cryptoAmount.toFixed(result.decimals)} ${coinRaw}\`** (${formatEur(cents)})\n` +
+      `To:\n\`${result.wallet.address}\`\n\n` +
+      `The exact amount is reserved for you for the next 2 hours — once it lands with ${result.wallet.min_confirmations} confirmation(s) it is credited to your balance automatically.`,
+  );
 }
 
 function opt(interaction: any, name: string): string | number | undefined {
@@ -309,11 +362,24 @@ async function handleDeposit(interaction: any, userId: string, username: string)
     );
   }
 
-  return makeEphemeralResponse(
-    `**Deposit ${COINS[coin].label}**\n` +
-      `Send to:\n\`${wallet.address}\`\n\n` +
-      `Your payment is matched to you for the next 2 hours, credited in euros at the live rate after ${wallet.min_confirmations} confirmation(s). Only send ${COINS[coin].label} to this address.`,
-  );
+  return Response.json({
+    type: 4,
+    data: {
+      content:
+        `**Deposit ${COINS[coin].label}**\n` +
+        `Send to:\n\`${wallet.address}\`\n\n` +
+        `Tap **Amount** to lock the exact amount you will send — it is then detected and credited automatically after ${wallet.min_confirmations} confirmation(s). Only send ${COINS[coin].label} to this address.`,
+      components: [
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 1, label: "Amount", custom_id: `dep:${coin}:amount` },
+          ],
+        },
+      ],
+      flags: 64,
+    },
+  });
 }
 
 async function handleWithdraw(interaction: any, userId: string, username: string) {
