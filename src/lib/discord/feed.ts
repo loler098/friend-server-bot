@@ -14,7 +14,7 @@ export type GameRecord = {
   betCents: number;
   payoutCents: number;
   detail?: string;
-  guildId?: string;
+  guildId?: string | undefined;
 };
 
 /** Persists a finished round and posts it to the #game-results feed. */

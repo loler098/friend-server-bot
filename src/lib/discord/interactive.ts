@@ -18,7 +18,7 @@ import {
 
 const HOUSE_EDGE = 0.02;
 
-export type GameMeta = { guildId?: string };
+export type GameMeta = { guildId?: string | undefined };
 
 function meta(state: any): GameMeta {
   return (state?._meta as GameMeta) ?? {};
