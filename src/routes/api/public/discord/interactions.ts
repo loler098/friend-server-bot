@@ -105,7 +105,7 @@ function err(message: string) {
   return notice(`⚠️ ${message}`, COLORS.loss, true);
 }
 
-function ok(message: string, accent = COLORS.win) {
+function ok(message: string, accent: number = COLORS.win) {
   return notice(message, accent, true);
 }
 
