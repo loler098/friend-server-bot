@@ -2,6 +2,18 @@ import type { Database } from "@/integrations/supabase/types";
 
 export const DISCORD_API = "https://discord.com/api/v10";
 
+const VISIBILITY_OPTION = {
+  name: "visibility",
+  description: "Where to play: here, or in a public/private thread",
+  type: 3,
+  required: false,
+  choices: [
+    { name: "Here in this channel", value: "channel" },
+    { name: "Public thread", value: "public" },
+    { name: "Private thread", value: "private" },
+  ],
+} as const;
+
 export const COMMANDS = [
   { name: "register", description: "Create a casino account", type: 1 },
   { name: "balance", description: "Check your euro balance (private)", type: 1 },
@@ -21,6 +33,7 @@ export const COMMANDS = [
           { name: "Tails", value: "tails" },
         ],
       },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -29,6 +42,7 @@ export const COMMANDS = [
     type: 1,
     options: [
       { name: "amount", description: "Bet in euros, e.g. 12.50", type: 10, required: true, min_value: 0.1 },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -37,6 +51,7 @@ export const COMMANDS = [
     type: 1,
     options: [
       { name: "amount", description: "Bet in euros, e.g. 12.50", type: 10, required: true, min_value: 0.1 },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -46,6 +61,7 @@ export const COMMANDS = [
     options: [
       { name: "amount", description: "Bet in euros", type: 10, required: true, min_value: 0.1 },
       { name: "mines", description: "Number of mines (1-19)", type: 4, required: true, min_value: 1, max_value: 19 },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -65,6 +81,7 @@ export const COMMANDS = [
           { name: "Hard (1 of 3 safe)", value: "hard" },
         ],
       },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -86,6 +103,7 @@ export const COMMANDS = [
           { name: "50x", value: 50 },
         ],
       },
+      VISIBILITY_OPTION,
     ],
   },
   {
@@ -129,6 +147,43 @@ export const COMMANDS = [
     ],
   },
   { name: "leaderboard", description: "Show the richest players (private)", type: 1 },
+  { name: "rtp", description: "Live RTP tracker for every game", type: 1 },
+  {
+    name: "tip",
+    description: "Send euros from your balance to another player",
+    type: 1,
+    options: [
+      { name: "user", description: "Who to tip", type: 6, required: true },
+      { name: "amount", description: "Amount in euros", type: 10, required: true, min_value: 0.01 },
+    ],
+  },
+  {
+    name: "claim",
+    description: "Redeem a promo code",
+    type: 1,
+    options: [{ name: "code", description: "Your promo code", type: 3, required: true }],
+  },
+  {
+    name: "createpromo",
+    description: "Owner: create a promo code",
+    type: 1,
+    options: [
+      { name: "amount", description: "Reward per claim in euros", type: 10, required: true, min_value: 0.01 },
+      { name: "uses", description: "How many people can use it", type: 4, required: true, min_value: 1, max_value: 1000 },
+    ],
+  },
+  { name: "startrain", description: "Owner: start a rain event", type: 1 },
+  { name: "stoprain", description: "Owner: end the current rain event now", type: 1 },
+  {
+    name: "amoutrain",
+    description: "Owner: set rain prize, winners and duration",
+    type: 1,
+    options: [
+      { name: "amount", description: "Total prize pool in euros", type: 10, required: true, min_value: 0.01 },
+      { name: "winners", description: "Number of winners", type: 4, required: true, min_value: 1, max_value: 50 },
+      { name: "duration", description: "Duration in seconds", type: 4, required: true, min_value: 10, max_value: 3600 },
+    ],
+  },
   {
     name: "payouts",
     description: "Admin: review pending withdrawals",

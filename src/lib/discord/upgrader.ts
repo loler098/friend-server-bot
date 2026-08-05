@@ -1,4 +1,5 @@
 import { DISCORD_API } from "./commands";
+import { IS_COMPONENTS_V2, type Component } from "./ui";
 
 function appIdFromToken(token: string): string | null {
   try {
@@ -11,41 +12,38 @@ function appIdFromToken(token: string): string | null {
   }
 }
 
-const FRAMES = ["🎰 |", "🎰 /", "🎰 —", "🎰 \\"];
-
-/** ACKs the interaction ourselves, animates a spin, then shows the result. */
+/** ACKs the interaction ourselves, animates spin frames, then shows the final card. */
 export async function animateUpgrader(
   interactionId: string,
   interactionToken: string,
-  header: string,
-  finalContent: string,
+  frames: Component[][],
+  finalComponents: Component[],
   applicationId?: string,
 ) {
   const token = process.env["DISCORD_BOT_TOKEN"];
   const appId = applicationId ?? (token ? appIdFromToken(token) : null);
-  if (!appId) return false;
+  if (!appId || frames.length === 0) return false;
 
   const ack = await fetch(`${DISCORD_API}/interactions/${interactionId}/${interactionToken}/callback`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: 4, data: { content: `${header}\n${FRAMES[0]} spinning…` } }),
+    body: JSON.stringify({ type: 4, data: { flags: IS_COMPONENTS_V2, components: frames[0] } }),
   });
   if (!ack.ok) return false;
 
-  // Webhook edits are authenticated by the interaction token itself.
   const editUrl = `${DISCORD_API}/webhooks/${appId}/${interactionToken}/messages/@original`;
-  const edit = (content: string) =>
+  const edit = (components: Component[]) =>
     fetch(editUrl, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ flags: IS_COMPONENTS_V2, components }),
     });
 
-  for (let i = 1; i < 6; i++) {
-    await new Promise((r) => setTimeout(r, 350));
-    await edit(`${header}\n${FRAMES[i % FRAMES.length]} spinning…`).catch(() => null);
+  for (let i = 1; i < frames.length; i++) {
+    await new Promise((r) => setTimeout(r, 400));
+    await edit(frames[i]!).catch(() => null);
   }
-  await new Promise((r) => setTimeout(r, 350));
-  await edit(finalContent).catch(() => null);
+  await new Promise((r) => setTimeout(r, 400));
+  await edit(finalComponents).catch(() => null);
   return true;
 }
