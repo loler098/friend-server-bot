@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       bot_gateway_status: {
         Row: {
           connected: boolean | null
@@ -110,6 +128,54 @@ export type Database = {
         }
         Relationships: []
       }
+      game_results: {
+        Row: {
+          bet_cents: number
+          created_at: string
+          detail: string | null
+          discord_user_id: string
+          discord_username: string
+          game: string
+          id: string
+          multiplier: number
+          payout_cents: number
+          result: string
+          round_id: string
+          server_seed: string
+          server_seed_hash: string
+        }
+        Insert: {
+          bet_cents: number
+          created_at?: string
+          detail?: string | null
+          discord_user_id: string
+          discord_username: string
+          game: string
+          id?: string
+          multiplier?: number
+          payout_cents: number
+          result: string
+          round_id: string
+          server_seed: string
+          server_seed_hash: string
+        }
+        Update: {
+          bet_cents?: number
+          created_at?: string
+          detail?: string | null
+          discord_user_id?: string
+          discord_username?: string
+          game?: string
+          id?: string
+          multiplier?: number
+          payout_cents?: number
+          result?: string
+          round_id?: string
+          server_seed?: string
+          server_seed_hash?: string
+        }
+        Relationships: []
+      }
       game_sessions: {
         Row: {
           bet_cents: number
@@ -176,6 +242,151 @@ export type Database = {
           discord_username?: string
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      promo_claims: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          discord_user_id: string
+          discord_username: string
+          id: string
+          promo_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          discord_user_id: string
+          discord_username: string
+          id?: string
+          promo_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          discord_user_id?: string
+          discord_username?: string
+          id?: string
+          promo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_claims_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          amount_cents: number
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          max_uses: number
+          uses: number
+        }
+        Insert: {
+          active?: boolean
+          amount_cents: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_uses?: number
+          uses?: number
+        }
+        Update: {
+          active?: boolean
+          amount_cents?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_uses?: number
+          uses?: number
+        }
+        Relationships: []
+      }
+      rain_entries: {
+        Row: {
+          created_at: string
+          discord_user_id: string
+          discord_username: string
+          id: string
+          rain_id: string
+        }
+        Insert: {
+          created_at?: string
+          discord_user_id: string
+          discord_username: string
+          id?: string
+          rain_id: string
+        }
+        Update: {
+          created_at?: string
+          discord_user_id?: string
+          discord_username?: string
+          id?: string
+          rain_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rain_entries_rain_id_fkey"
+            columns: ["rain_id"]
+            isOneToOne: false
+            referencedRelation: "rain_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rain_events: {
+        Row: {
+          channel_id: string | null
+          created_at: string
+          created_by: string | null
+          duration_seconds: number
+          ends_at: string | null
+          guild_id: string | null
+          id: string
+          message_id: string | null
+          prize_cents: number
+          status: string
+          updated_at: string
+          winners: number
+        }
+        Insert: {
+          channel_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number
+          ends_at?: string | null
+          guild_id?: string | null
+          id?: string
+          message_id?: string | null
+          prize_cents?: number
+          status?: string
+          updated_at?: string
+          winners?: number
+        }
+        Update: {
+          channel_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number
+          ends_at?: string | null
+          guild_id?: string | null
+          id?: string
+          message_id?: string | null
+          prize_cents?: number
+          status?: string
+          updated_at?: string
+          winners?: number
         }
         Relationships: []
       }
