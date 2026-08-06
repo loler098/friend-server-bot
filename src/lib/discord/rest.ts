@@ -48,10 +48,13 @@ export async function findChannelByName(guildId: string, name: string): Promise<
       name: string;
       type: number;
     }>;
-    const wanted = name.toLowerCase();
-    const hit = channels.find(
-      (c) => (c.type === 0 || c.type === 5) && c.name.toLowerCase().includes(wanted),
-    );
+    // Normalise: drop emojis, separators and spaces so "🎲｜game results" matches "game-results".
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const wanted = norm(name);
+    const textChannels = channels.filter((c) => c.type === 0 || c.type === 5);
+    const hit =
+      textChannels.find((c) => norm(c.name) === wanted) ??
+      textChannels.find((c) => norm(c.name).includes(wanted));
     return hit?.id ?? null;
   } catch {
     return null;
