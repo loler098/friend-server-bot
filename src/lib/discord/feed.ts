@@ -1,8 +1,8 @@
 import { getAdminClient } from "./games";
 import { formatEur } from "./money";
 import { randomSeed, roundId as makeRoundId, sha256 } from "./fair";
-import { resolveChannel } from "./config";
-import { sendMessage } from "./rest";
+import { getConfig, resolveChannel, setConfig } from "./config";
+import { editMessage, sendMessage } from "./rest";
 import { COLORS, IS_COMPONENTS_V2, button, container, row, separator, stats, text, title } from "./ui";
 
 export const GAME_FEED_CHANNEL = "game-results";
@@ -117,4 +117,51 @@ export async function getRound(roundId: string) {
     .eq("round_id", roundId)
     .maybeSingle();
   return data;
+}
+
+/* ----------------------------- Live RTP card ----------------------------- */
+
+const RTP_MESSAGE_KEY = "rtp:message";
+
+export async function rtpComponents() {
+  const s = await getRtpStats();
+  return [
+    container(COLORS.info, [
+      title("📊", "Live RTP tracker", `Across every game played · refreshes every 5 min`),
+      text(
+        stats([
+          ["Total bets", s.bets.toLocaleString("en-US")],
+          ["Total wagered", formatEur(s.wageredCents)],
+          ["Total payouts", formatEur(s.payoutCents)],
+          ["Current RTP", `${s.rtp.toFixed(2)}%`],
+          ["Target RTP", "98.00%"],
+        ]),
+      ),
+      separator(),
+      text(`-# Updated <t:${Math.floor(Date.now() / 1000)}:R>`),
+    ]),
+  ];
+}
+
+/** Posts (or replaces) the auto-refreshing RTP tracker message in a channel. */
+export async function postRtpTracker(channelId: string) {
+  const msg = (await sendMessage(channelId, {
+    flags: IS_COMPONENTS_V2,
+    components: await rtpComponents(),
+  })) as { id: string };
+  await setConfig(RTP_MESSAGE_KEY, `${channelId}:${msg.id}`);
+  return msg.id;
+}
+
+/** Edits the stored RTP tracker message with fresh numbers. Called every 5 minutes. */
+export async function refreshRtpMessage(): Promise<{ refreshed: boolean }> {
+  const stored = await getConfig(RTP_MESSAGE_KEY);
+  if (!stored) return { refreshed: false };
+  const [channelId, messageId] = stored.split(":");
+  if (!channelId || !messageId) return { refreshed: false };
+  await editMessage(channelId, messageId, {
+    flags: IS_COMPONENTS_V2,
+    components: await rtpComponents(),
+  });
+  return { refreshed: true };
 }

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicDiscordGatewayRouteImport } from './routes/api/public/discord/gateway'
 import { Route as ApiPublicDiscordInteractionsRouteImport } from './routes/api/public/discord/interactions'
+import { Route as ApiPublicDiscordRtpRouteImport } from './routes/api/public/discord/rtp'
 import { Route as ApiPublicDiscordScanDepositsRouteImport } from './routes/api/public/discord/scan-deposits'
 
 const IndexRoute = IndexRouteImport.update({
@@ -30,6 +31,11 @@ const ApiPublicDiscordInteractionsRoute =
     path: '/api/public/discord/interactions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDiscordRtpRoute = ApiPublicDiscordRtpRouteImport.update({
+  id: '/api/public/discord/rtp',
+  path: '/api/public/discord/rtp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDiscordScanDepositsRoute =
   ApiPublicDiscordScanDepositsRouteImport.update({
     id: '/api/public/discord/scan-deposits',
@@ -41,12 +47,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/discord/gateway': typeof ApiPublicDiscordGatewayRoute
   '/api/public/discord/interactions': typeof ApiPublicDiscordInteractionsRoute
+  '/api/public/discord/rtp': typeof ApiPublicDiscordRtpRoute
   '/api/public/discord/scan-deposits': typeof ApiPublicDiscordScanDepositsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/discord/gateway': typeof ApiPublicDiscordGatewayRoute
   '/api/public/discord/interactions': typeof ApiPublicDiscordInteractionsRoute
+  '/api/public/discord/rtp': typeof ApiPublicDiscordRtpRoute
   '/api/public/discord/scan-deposits': typeof ApiPublicDiscordScanDepositsRoute
 }
 export interface FileRoutesById {
@@ -54,6 +62,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/api/public/discord/gateway': typeof ApiPublicDiscordGatewayRoute
   '/api/public/discord/interactions': typeof ApiPublicDiscordInteractionsRoute
+  '/api/public/discord/rtp': typeof ApiPublicDiscordRtpRoute
   '/api/public/discord/scan-deposits': typeof ApiPublicDiscordScanDepositsRoute
 }
 export interface FileRouteTypes {
@@ -62,18 +71,21 @@ export interface FileRouteTypes {
     | '/'
     | '/api/public/discord/gateway'
     | '/api/public/discord/interactions'
+    | '/api/public/discord/rtp'
     | '/api/public/discord/scan-deposits'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/api/public/discord/gateway'
     | '/api/public/discord/interactions'
+    | '/api/public/discord/rtp'
     | '/api/public/discord/scan-deposits'
   id:
     | '__root__'
     | '/'
     | '/api/public/discord/gateway'
     | '/api/public/discord/interactions'
+    | '/api/public/discord/rtp'
     | '/api/public/discord/scan-deposits'
   fileRoutesById: FileRoutesById
 }
@@ -81,6 +93,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicDiscordGatewayRoute: typeof ApiPublicDiscordGatewayRoute
   ApiPublicDiscordInteractionsRoute: typeof ApiPublicDiscordInteractionsRoute
+  ApiPublicDiscordRtpRoute: typeof ApiPublicDiscordRtpRoute
   ApiPublicDiscordScanDepositsRoute: typeof ApiPublicDiscordScanDepositsRoute
 }
 
@@ -107,6 +120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDiscordInteractionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/discord/rtp': {
+      id: '/api/public/discord/rtp'
+      path: '/api/public/discord/rtp'
+      fullPath: '/api/public/discord/rtp'
+      preLoaderRoute: typeof ApiPublicDiscordRtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/discord/scan-deposits': {
       id: '/api/public/discord/scan-deposits'
       path: '/api/public/discord/scan-deposits'
@@ -121,18 +141,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicDiscordGatewayRoute: ApiPublicDiscordGatewayRoute,
   ApiPublicDiscordInteractionsRoute: ApiPublicDiscordInteractionsRoute,
+  ApiPublicDiscordRtpRoute: ApiPublicDiscordRtpRoute,
   ApiPublicDiscordScanDepositsRoute: ApiPublicDiscordScanDepositsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -35,7 +35,7 @@ import {
   setDepositIntentAmount,
   settleWithdrawal,
 } from "@/lib/discord/banking";
-import { getRound, getRtpStats, recordGame } from "@/lib/discord/feed";
+import { getRound, postRtpTracker, recordGame, rtpComponents } from "@/lib/discord/feed";
 import { claimPromo, createPromo } from "@/lib/discord/promo";
 import {
   getRainConfig,
@@ -351,7 +351,7 @@ async function handleApplicationCommand(interaction: any) {
       case "leaderboard":
         return await handleLeaderboard();
       case "rtp":
-        return await handleRtp();
+        return await handleRtp(interaction);
       case "tip":
         return await handleTip(interaction, userId, username);
       case "claim":
@@ -437,22 +437,24 @@ async function handleLeaderboard() {
   );
 }
 
-async function handleRtp() {
-  const s = await getRtpStats();
-  return v2Reply([
-    container(COLORS.info, [
-      title("📊", "Live RTP tracker", "Across every game played"),
-      text(
-        stats([
-          ["Total bets", s.bets.toLocaleString("en-US")],
-          ["Total wagered", formatEur(s.wageredCents)],
-          ["Total payouts", formatEur(s.payoutCents)],
-          ["Current RTP", `${s.rtp.toFixed(2)}%`],
-          ["Target RTP", "98.00%"],
-        ]),
-      ),
-    ]),
-  ]);
+async function handleRtp(interaction: any) {
+  const channelId: string | undefined = interaction.channel_id;
+  if (channelId) {
+    try {
+      await postRtpTracker(channelId);
+      return v2Reply(
+        [
+          container(COLORS.info, [
+            title("📊", "Live RTP tracker posted", "It refreshes automatically every 5 minutes."),
+          ]),
+        ],
+        true,
+      );
+    } catch (error) {
+      console.error("rtp tracker post failed", error);
+    }
+  }
+  return v2Reply(await rtpComponents());
 }
 
 async function handleTip(interaction: any, userId: string, username: string) {
