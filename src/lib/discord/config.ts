@@ -21,11 +21,15 @@ export async function resolveChannel(
   guildId: string | undefined,
   channelName: string,
 ): Promise<string | null> {
-  if (!guildId) return null;
-  const key = `channel:${channelName}:${guildId}`;
+  const globalKey = `channel:${channelName}`;
+  if (!guildId) return await getConfig(globalKey);
+  const key = `${globalKey}:${guildId}`;
   const cached = await getConfig(key);
   if (cached) return cached;
   const found = await findChannelByName(guildId, channelName);
-  if (found) await setConfig(key, found);
+  if (found) {
+    await setConfig(key, found);
+    await setConfig(globalKey, found);
+  }
   return found;
 }
