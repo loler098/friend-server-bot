@@ -35,7 +35,7 @@ import {
   setDepositIntentAmount,
   settleWithdrawal,
 } from "@/lib/discord/banking";
-import { getRound, getRtpStats, recordGame } from "@/lib/discord/feed";
+import { getRound, postRtpTracker, recordGame, rtpComponents } from "@/lib/discord/feed";
 import { claimPromo, createPromo } from "@/lib/discord/promo";
 import {
   getRainConfig,
