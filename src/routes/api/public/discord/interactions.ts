@@ -351,7 +351,7 @@ async function handleApplicationCommand(interaction: any) {
       case "leaderboard":
         return await handleLeaderboard();
       case "rtp":
-        return await handleRtp();
+        return await handleRtp(interaction);
       case "tip":
         return await handleTip(interaction, userId, username);
       case "claim":
