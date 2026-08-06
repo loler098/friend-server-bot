@@ -45,16 +45,22 @@ export async function recordGame(rec: GameRecord): Promise<string> {
     console.error("recordGame insert failed", error);
   }
 
-  void postToFeed(rec, roundId, multiplier, result).catch((e) =>
-    console.error("feed post failed", e),
-  );
+  // Await: fire-and-forget promises are killed when the worker response returns.
+  try {
+    await postToFeed(rec, roundId, multiplier, result);
+  } catch (e) {
+    console.error("feed post failed", e);
+  }
 
   return roundId;
 }
 
 async function postToFeed(rec: GameRecord, roundId: string, multiplier: number, result: string) {
   const channelId = await resolveChannel(rec.guildId, GAME_FEED_CHANNEL);
-  if (!channelId) return;
+  if (!channelId) {
+    console.error("game feed channel not found", { guildId: rec.guildId });
+    return;
+  }
 
   const isWin = result === "win";
   const accent = isWin ? COLORS.win : result === "push" ? COLORS.neutral : COLORS.loss;
